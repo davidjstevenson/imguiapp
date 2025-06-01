@@ -1,0 +1,26 @@
+#pragma once
+
+namespace version
+{
+
+constexpr const char *release_type()
+{
+    return "@VERSION_TYPE@";
+}
+
+constexpr const char *version()
+{
+    return "@VERSION_MAJOR@.@VERSION_MINOR@";
+}
+
+constexpr const char *hash()
+{
+    return "@GIT_HASH@";
+}
+
+constexpr const char *build_date()
+{
+    return "@VERSION_BUILD_DATE@";
+}
+
+} // namespace version

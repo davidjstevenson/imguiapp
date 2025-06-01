@@ -1,0 +1,12 @@
+.vscode/
+.vs/
+.idea/
+.ignore/
+
+builds/
+out/
+assets/
+install/
+
+CMakeUserPresets.json
+.last-preset

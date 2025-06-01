@@ -1,0 +1,128 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 3
+    },
+    "configurePresets": [
+        {
+            "name": "global",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/builds/${presetName}",
+            "toolchainFile": "${sourceDir}/builds/${presetName}/generators/conan_toolchain.cmake",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "toolset": {
+                "value": "host=x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_PREFIX_PATH": "${sourceDir}/builds/${presetName}/generators",
+                "CMAKE_POLICY_DEFAULT_CMP0091": "NEW",
+                "FIND_PACKAGE_ARGS": "QUIET",
+
+                "ENABLE_TRACY": false,
+                "MSVC_JMC": false,
+                "IMGUIAPP_VERSION_ZERO": false,
+                "INCLUDE_DEBUG_FEATURES": false
+            }
+        },
+        {
+            "name": "base-windows",
+            "hidden": true,
+            "inherits": "global",
+            "vendor": {
+                "jetbrains.com/clion": {
+                    "toolchain": "Visual Studio"
+                },
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Windows"
+                    ]
+                }
+            },
+            "environment": {},
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "_debug",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "_release",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "dev-base",
+            "hidden": true,
+            "cacheVariables": {
+                "MSVC_JMC": true,
+                "IMGUIAPP_VERSION_ZERO": true,
+                "ENABLE_TRACY": true,
+                "INCLUDE_DEBUG_FEATURES": true
+            }
+        },
+        {
+            "name": "dev-dbg",
+            "inherits": [
+                "_debug",
+                "dev-base",
+                "base-windows"
+            ]
+        },
+        {
+            "name": "dev-rel",
+            "inherits": [
+                "_release",
+                "dev-base",
+                "base-windows"
+            ]
+        },
+        {
+            "name": "debug",
+            "inherits": [
+                "_debug",
+                "base-windows"
+            ]
+        },
+        {
+            "name": "release",
+            "inherits": [
+                "_release",
+                "base-windows"
+            ]
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "dev-dbg",
+            "configurePreset": "dev-dbg"
+        },
+        {
+            "name": "dev-rel",
+            "configurePreset": "dev-rel"
+        },
+        {
+            "name": "debug",
+            "configurePreset": "debug"
+        },
+        {
+            "name": "release",
+            "configurePreset": "release"
+        }
+    ]
+}
