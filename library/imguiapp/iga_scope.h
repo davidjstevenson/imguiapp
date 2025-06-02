@@ -1,7 +1,8 @@
 #pragma once
 
 #include "imgui.h"
-
+#include <optional>
+#include <string>
 
 namespace iga::scope {
 

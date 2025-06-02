@@ -1,4 +1,4 @@
-#pragma once
+#include "iga_exec.h"
 #include "imgui.h"
 #include "implot.h"
 
@@ -16,13 +16,14 @@
 #include <GLFW/glfw3native.h>
 #include "tracy/Tracy.hpp"
 
-#include "time_utils.h"
-
 #include <windows.h>
 #include <fmt/format.h>
 
-namespace iga::exec {
+#include "versioning/version.h"
+#include "iga_time.h"
 
+
+namespace iga::exec {
 
 void glfw_error_callback(int error, const char* description)
 {
@@ -33,23 +34,6 @@ void iconify(GLFWwindow* window, int iconified)
 {
     //__debugbreak();
 }
-
-
-struct State {
-    struct FpsIdling {
-        float fpsIdle     = 3.f;   // FPS when idling
-        bool enableIdling = true;  // a bool to enable/disable idling
-        bool isIdling     = false; // an output parameter filled by the runner
-    } idler;
-};
-
-
-struct ExecHooks {
-    void (*preframe)(void*)  = nullptr;
-    void (*render)(void*)    = nullptr;
-    void (*postframe)(void*) = nullptr;
-};
-
 
 void IdleBySleeping(State::FpsIdling& ioIdling)
 {
@@ -68,7 +52,7 @@ void IdleBySleeping(State::FpsIdling& ioIdling)
 }
 
 
-GLFWwindow* setup()
+GLFWwindow* setup(std::string_view app_name)
 {
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
@@ -83,7 +67,6 @@ GLFWwindow* setup()
     // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 
     // Create window with graphics context
-    const auto app_name            = APPLICATION_NAME_STR;
     const std::string release_type = version::release_type();
     std::string app_version_suffix = {};
     if (!release_type.empty()) {
@@ -191,71 +174,6 @@ void exec(GLFWwindow* window, State* state, ExecHooks& hooks, void* data)
     ImGui_ImplGlfw_Shutdown();
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
-}
-
-
-struct Hooks {
-    void (*preframe)(void*)  = nullptr;
-    void (*render)(void*)    = nullptr;
-    void (*postframe)(void*) = nullptr;
-
-    void (*setup)(void*, GLFWwindow*)    = nullptr;
-    void (*teardown)(void*, GLFWwindow*) = nullptr;
-};
-
-
-template <typename T>
-void pre_frame(void* ptr)
-{
-    reinterpret_cast<T*>(ptr)->pre_frame();
-}
-
-template <typename T>
-void post_frame(void* ptr)
-{
-    reinterpret_cast<T*>(ptr)->post_frame();
-}
-
-template <typename T>
-void render_frame(void* ptr)
-{
-    reinterpret_cast<T*>(ptr)->render_frame();
-}
-
-template <typename T>
-void setup(void* ptr, GLFWwindow* window)
-{
-    reinterpret_cast<T*>(ptr)->setup(window);
-}
-
-template <typename T>
-void teardown(void* ptr, GLFWwindow* window)
-{
-    reinterpret_cast<T*>(ptr)->teardown(window);
-}
-
-template <typename T>
-void run(State* state, T* app)
-{
-    Hooks hooks{&pre_frame<T>, &render_frame<T>, &post_frame<T>, &setup<T>, &teardown<T>};
-    run(state, hooks, app);
-}
-
-void run(State* state, Hooks& hooks, void* data = nullptr)
-{
-    auto glfw_window = setup();
-    if (hooks.setup) {
-        hooks.setup(data, glfw_window);
-    }
-
-    ExecHooks exec_hooks = {hooks.preframe, hooks.render, hooks.postframe};
-    exec(glfw_window, state, exec_hooks, data);
-
-    if (hooks.teardown) {
-        hooks.teardown(data, glfw_window);
-    }
-
-    destroy(glfw_window);
 }
 
 

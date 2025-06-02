@@ -1,16 +1,17 @@
 
 #include "versioning/version.h"
 
-#include "imguiapp/application.h"
 #include "imguiapp/fonts/fonts.h"
-#include "imguiapp/imgui_exec.h"
-#include "imguiapp/imgui_scope.h"
-#include "imguiapp/imgui_stl.h"
-#include "imguiapp/imgui_debug.h"
-#include "imguiapp/imgui_comp.h"
+#include "imguiapp/iga_app.h"
+#include "imguiapp/iga_exec.h"
+#include "imguiapp/iga_scope.h"
+#include "imguiapp/iga_stl.h"
+#include "imguiapp/iga_debug.h"
+#include "imguiapp/iga_comp.h"
 
 #include <fmt/format.h>
 
+#include <GLFW/glfw3.h>
 
 class Application
 {
@@ -20,6 +21,7 @@ public:
     ImGuiID dockspace_id;
     iga::app::DebugWindows debug_windows;
     iga::exec::State iga_state;
+    iga::app::Settings settings;
 
     void pre_frame() { fonts->update(); }
     void post_frame() {}
@@ -31,8 +33,8 @@ public:
         iga::app::render_dockspace(&menu, &dockspace_id);
         iga::app::render_debug_windows(&debug_windows, &iga_state);
 
-        iga::scope::Window window;
-        window.Begin("Test");
+        // iga::scope::Window window;
+        // window.Begin("Test");
     }
 
     void setup(GLFWwindow* window)
@@ -57,10 +59,13 @@ public:
         // clang-format on
 
 
+        settings = iga::app::init_settings(&iga_state);
+        settings.load();
+
         iga::app::init_default_style();
     }
 
-    void teardown(GLFWwindow* window) {}
+    void teardown(GLFWwindow* window) { settings.save(); }
 };
 
 

@@ -1,22 +1,11 @@
-#pragma once
-
-#include "imgui.h"
-#include "imgui_exec.h"
-
-#include <variant>
-#include <string>
-#include <vector>
+#include "iga_comp.h"
+#include "iga_exec.h"
 
 
 namespace iga::comp {
 
-inline void VSpace(float height)
-{
-    ImGui::Dummy({height, 0});
-}
 
-
-inline void ShowAsOverlay(const std::string& title, bool* p_open, void (*render)(void*), void* data, int* corner)
+void ShowAsOverlay(const std::string& title, bool* p_open, void (*render)(void*), void* data, int* corner)
 {
     ImGuiIO& io                   = ImGui::GetIO();
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking
@@ -54,7 +43,7 @@ inline void ShowAsOverlay(const std::string& title, bool* p_open, void (*render)
     ImGui::End();
 }
 
-inline void ShowMouseOverlay(bool* p_open)
+void ShowMouseOverlay(bool* p_open)
 {
     static int corner = 3;
     ShowAsOverlay(
@@ -71,7 +60,7 @@ inline void ShowMouseOverlay(bool* p_open)
         nullptr, &corner);
 }
 
-inline void ShowFPSOverlay(bool* p_open, iga::exec::State* state)
+void ShowFPSOverlay(bool* p_open, iga::exec::State* state)
 {
     static int corner = 3;
     ShowAsOverlay(
@@ -95,67 +84,4 @@ inline void ShowFPSOverlay(bool* p_open, iga::exec::State* state)
 }
 
 
-struct RegexFilter {
-    RegexFilter(const char* default_filter = "") {}
-    bool Draw(const char* label = "Filter", float width = 0.0f) { return false; }
-    bool PassFilter(const char* text, const char* text_end = nullptr) const { return false; }
-    void Build() {}
-    void Clear() {}
-    bool IsActive() const { return false; }
-};
-
-
-struct MenuItem {
-    struct Menu {
-        std::vector<MenuItem> children = {};
-    };
-    struct Toggle {
-        bool* selected       = nullptr;
-        std::string shortcut = {};
-    };
-    struct Action {
-        void (*callback)(void*) = nullptr;
-        void* data              = nullptr;
-        std::string shortcut    = {};
-    };
-
-    using Type = std::variant<Menu, Toggle, Action>;
-
-    struct RenderLeaf {
-        MenuItem& parent;
-
-        void operator()(Menu& v)
-        {
-            if (ImGui::BeginMenu(parent.name.c_str(), parent.enabled)) {
-                for (auto& child : v.children) {
-                    child.render();
-                }
-                ImGui::EndMenu();
-            }
-        }
-        void operator()(Toggle& v)
-        {
-            ImGui::MenuItem(parent.name.c_str(), v.shortcut.c_str(), v.selected, parent.enabled);
-        }
-
-        void operator()(Action& v)
-        {
-            if (ImGui::MenuItem(parent.name.c_str(), v.shortcut.c_str(), nullptr, parent.enabled)) {
-                if (v.callback) {
-                    v.callback(v.data);
-                }
-            }
-        }
-    };
-
-    std::string name = {};
-    Type data        = {};
-    bool enabled     = true;
-
-    void render() { std::visit(RenderLeaf{*this}, data); }
-};
-
-
 } // namespace iga::comp
-
-namespace ImGuiComp = iga::comp;

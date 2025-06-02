@@ -15,7 +15,14 @@ find_package(tracy ${FIND_PACKAGE_ARGS} CONFIG REQUIRED)
 string(TOUPPER ${CMAKE_BUILD_TYPE} BUILDTYPE)
 
 set(SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/time_utils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/iga_app.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/iga_comp.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/iga_debug.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/iga_exec.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/iga_filesystem.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/iga_scope.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/iga_stl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/iga_time.cpp
 )
 
 set(IMGUI_SOURCES
@@ -31,6 +38,7 @@ set(IMGUI_SOURCES
 
 set(FONT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/fonts/fonts.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/fonts/fonts.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/fonts/font_opensans.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/fonts/font_robotomono.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/fonts/font_fa_regular.cpp

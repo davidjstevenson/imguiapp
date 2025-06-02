@@ -1,7 +1,7 @@
 #pragma once
 
 #include "imgui.h"
-#include "time_utils.h"
+#include "iga_time.h"
 
 #include <ranges>
 #include <string>
@@ -21,12 +21,7 @@ inline void TextWrapped(const std::string& text)
     TextWrapped(text.c_str());
 }
 
-inline void TextWrapped(const std::string& text, float width)
-{
-    PushTextWrapPos(width);
-    Text(text);
-    PopTextWrapPos();
-}
+void TextWrapped(const std::string& text, float width);
 
 inline bool Selectable(const std::string& label, bool* p_selected, ImGuiSelectableFlags flags = 0,
                        const ImVec2& size = ImVec2(0, 0))
@@ -123,23 +118,8 @@ inline bool FilterComboBox(std::string_view title, const T& values, int* index, 
 }
 
 
-inline bool Button(const std::string& text, const ImVec2& padding = {-1, -1}, const ImVec2& size_arg = {0, 0})
-{
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
-                        ImVec2{padding.x < 0 ? 10 : padding.x, padding.y < 0 ? 8 : padding.y});
-    auto result = ImGui::Button(text.c_str(), size_arg);
-    ImGui::PopStyleVar();
-    return result;
-}
-
-inline bool SmallButton(const std::string& text, const ImVec2& padding = {-1, -1})
-{
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
-                        ImVec2{padding.x < 0 ? 10 : padding.x, padding.y < 0 ? 8 : padding.y});
-    auto result = ImGui::SmallButton(text.c_str());
-    ImGui::PopStyleVar();
-    return result;
-}
+bool Button(const std::string& text, const ImVec2& padding = {-1, -1}, const ImVec2& size_arg = {0, 0});
+bool SmallButton(const std::string& text, const ImVec2& padding = {-1, -1});
 
 
 } // namespace ImGui

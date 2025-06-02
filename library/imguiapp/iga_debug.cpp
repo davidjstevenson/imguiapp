@@ -1,6 +1,4 @@
-#pragma once
-
-#include "imgui.h"
+#include "iga_debug.h"
 
 namespace iga::debug {
 

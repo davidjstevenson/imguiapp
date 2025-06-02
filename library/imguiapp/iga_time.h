@@ -77,7 +77,7 @@ inline std::string toTimeString(double tUTC)
 std::string to_string(double tUTC, double now = 0.0);
 
 
-double clock_seconds()
+inline double clock_seconds()
 {
     static const auto start = std::chrono::steady_clock::now();
 

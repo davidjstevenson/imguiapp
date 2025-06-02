@@ -1,14 +1,70 @@
-#pragma once
+#include "iga_app.h"
 
-#include "imgui_exec.h"
-#include "imgui_comp.h"
+#include "iga_exec.h"
+
+#include "imgui.h"
+#include "implot.h"
 
 #include <fmt/format.h>
 
-#include <vector>
-#include <variant>
+#include <print>
+#include <string>
+#include <array>
+
+#include <GLFW/glfw3.h>
+#include <windows.h>
 
 namespace iga::app {
+
+void wait_for_debugger()
+{
+    std::println("Waiting for debugger to attach");
+    while (!::IsDebuggerPresent()) {
+        ::Sleep(250);
+    }
+    std::println("Debugger attached");
+}
+
+std::array<int, 4> getWindowLocation(GLFWwindow* window)
+{
+    std::array<int, 4> location;
+    glfwGetWindowPos(window, &location[0], &location[1]);
+    glfwGetWindowSize(window, &location[2], &location[3]);
+    return location;
+}
+
+void restoreWindowLocation(GLFWwindow* window, std::array<int, 4> location)
+{
+    glfwSetWindowPos(window, location[0], location[1]);
+    glfwSetWindowSize(window, location[2], location[3]);
+}
+
+Settings init_settings(iga::exec::State* state)
+{
+    static std::string ini;
+#pragma warning(push)
+#pragma warning(disable : 4996)
+    auto local_app_data = getenv("LOCALAPPDATA");
+    auto directory      = std::filesystem::path(local_app_data) / state->application_name;
+#pragma warning(pop)
+
+    if (!std::filesystem::exists(directory)) {
+        std::filesystem::create_directories(directory);
+    }
+
+    ini = (directory / fmt::format("{}.ini", state->application_name)).string();
+
+    auto& io       = ImGui::GetIO();
+    io.IniFilename = ini.c_str();
+    ImGui::LoadIniSettingsFromDisk(io.IniFilename);
+
+    // clang-format off
+    return Settings {
+        .ini_file = directory / fmt::format("{}.ini", state->application_name),
+        .json_file = directory / fmt::format("{}.json", state->application_name)
+    };
+    // clang-format on
+}
 
 
 void init_default_style()
@@ -75,7 +131,7 @@ void render_dockspace(iga::comp::MenuItem* menu, ImGuiID* dockspace_id)
     ImGui::PopStyleVar(3);
 
     ImGuiIO& io   = ImGui::GetIO();
-    *dockspace_id = ImGui::GetID(APPLICATION_NAME_STR "_DockSpace");
+    *dockspace_id = ImGui::GetID("Application_DockSpace");
     ImGui::DockSpace(*dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 
     if (menu) {
@@ -85,16 +141,6 @@ void render_dockspace(iga::comp::MenuItem* menu, ImGuiID* dockspace_id)
     ImGui::End();
 }
 
-
-struct DebugWindows {
-    bool mouse_overlay = false;
-    bool fps_overlay   = false;
-    bool metrics       = false;
-    bool stack         = false;
-    bool style_editor  = false;
-    bool imgui_demo    = false;
-    bool implot_demo   = false;
-};
 
 iga::comp::MenuItem::Menu create_debug_menu(DebugWindows& debug_windows)
 {
