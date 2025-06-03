@@ -1,5 +1,9 @@
 #include "iga_filesystem.h"
 
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include "nfd.h"
+#include "nfd_glfw3.h"
+
 #include <fmt/format.h>
 #include <fstream>
 
@@ -52,6 +56,36 @@ void write(const std::filesystem::path& path, std::span<const std::byte> data)
         throw std::runtime_error(fmt::format("failed to open {}", path.string()));
     }
     ofs.write(reinterpret_cast<const char*>(data.data()), static_cast<std::streamsize>(data.size()));
+}
+
+std::optional<std::filesystem::path> select_folder_dialog(const std::filesystem::path& current, GLFWwindow* window)
+{
+    std::optional<std::filesystem::path> output;
+    auto current_path = current.string();
+
+    nfdu8char_t* outPath = nullptr;
+
+    nfdpickfolderu8args_t args;
+    args.defaultPath = current_path.c_str();
+
+    NFD_GetNativeWindowFromGLFWWindow(window, &args.parentWindow);
+
+    auto result = NFD_PickFolderU8_With(&outPath, &args);
+
+    if (NFD_OKAY == result) {
+        output = std::filesystem::path(outPath);
+        NFD_FreePathU8(outPath);
+    }
+    return output;
+}
+
+void init()
+{
+    NFD_Init();
+}
+void deinit()
+{
+    NFD_Quit();
 }
 
 } // namespace iga::filesystem

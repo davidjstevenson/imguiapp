@@ -38,7 +38,6 @@ struct Settings {
     }
 };
 
-
 std::array<int, 4> getWindowLocation(GLFWwindow* window);
 
 void restoreWindowLocation(GLFWwindow* window, std::array<int, 4> location);

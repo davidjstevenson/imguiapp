@@ -46,6 +46,8 @@ set(FONT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/fonts/font_fk_regular.cpp
 )
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/imguiapp/nativefiledialog)
+
 add_library(imguiapp STATIC ${SOURCES} ${IMGUI_SOURCES} ${FONT_SOURCES})
 target_link_libraries(imguiapp PUBLIC 
     glfw
@@ -53,6 +55,7 @@ target_link_libraries(imguiapp PUBLIC
     OpenGL::GL
     imgui::imgui
     implot::implot
+    nfd
     
     Tracy::TracyClient
     opengl32

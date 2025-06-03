@@ -25,6 +25,7 @@ void wait_for_debugger()
     std::println("Debugger attached");
 }
 
+
 std::array<int, 4> getWindowLocation(GLFWwindow* window)
 {
     std::array<int, 4> location;
@@ -59,7 +60,7 @@ Settings init_settings(iga::exec::State* state)
     ImGui::LoadIniSettingsFromDisk(io.IniFilename);
 
     // clang-format off
-    return Settings {
+    return Settings{
         .ini_file = directory / fmt::format("{}.ini", state->application_name),
         .json_file = directory / fmt::format("{}.json", state->application_name)
     };
@@ -146,7 +147,7 @@ iga::comp::MenuItem::Menu create_debug_menu(DebugWindows& debug_windows)
 {
     using iga::comp::MenuItem;
     // clang-format off
-    return {{
+    return { {
 #ifdef INCLUDE_DEBUG_FEATURES
         {"Mouse Overlay", MenuItem::Toggle{ &debug_windows.mouse_overlay }},
         {"Show FPS", MenuItem::Toggle{ &debug_windows.fps_overlay }},
@@ -155,9 +156,9 @@ iga::comp::MenuItem::Menu create_debug_menu(DebugWindows& debug_windows)
         {"Style Editor", MenuItem::Toggle{ &debug_windows.style_editor }},
         {"ImGui Demo", MenuItem::Toggle{ &debug_windows.imgui_demo }},
         {"ImPlot Demo", MenuItem::Toggle{ &debug_windows.implot_demo }},
-        {"Item Picker", MenuItem::Action{ [](void *){ ImGui::DebugStartItemPicker(); }}},
+        {"Item Picker", MenuItem::Action{ [](void*) { ImGui::DebugStartItemPicker(); }}},
 #endif
-    }};
+    } };
     // clang-format on
 }
 
