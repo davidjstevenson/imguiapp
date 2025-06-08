@@ -10,6 +10,73 @@
 
 namespace iga::filesystem {
 
+
+std::optional<Selection> File::render()
+{
+    static ImGuiTreeNodeFlags tree_node_flags_base = ImGuiTreeNodeFlags_SpanAllColumns;
+    ImGuiTreeNodeFlags node_flags                  = tree_node_flags_base;
+
+    if (dirty) refresh();
+
+    std::optional<Selection> selected;
+    if (root->extension && path.extension() != root->extension.value()) return selected;
+    if (!root->file_filter(stem)) return selected;
+
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+
+    ImGui::TreeNodeEx(root->extension ? stem_no_ext.c_str() : stem.c_str(), node_flags | ImGuiTreeNodeFlags_Leaf
+                                                                                | ImGuiTreeNodeFlags_NoTreePushOnOpen
+                                                                                | ImGuiTreeNodeFlags_SpanAllColumns);
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+        selected = {path, ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) ? Selection::Action::Double
+                                                                             : Selection::Action::Single};
+    }
+    ImGui::TableNextColumn();
+    ImGui::Text(fmt::format("{}", size));
+    return selected;
+};
+
+std::optional<Selection> Folder::render(bool* force_open)
+{
+    std::optional<Selection> selected;
+
+    static ImGuiTreeNodeFlags tree_node_flags_base = ImGuiTreeNodeFlags_SpanAllColumns;
+    ImGuiTreeNodeFlags node_flags                  = tree_node_flags_base;
+
+    if (dirty) refresh();
+
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+
+    if (force_open != nullptr) {
+        ImGui::SetNextItemOpen(*force_open);
+    }
+
+    bool open = ImGui::TreeNodeEx(stem.c_str(), node_flags);
+    if (ImGui::IsItemHovered()) {
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle)) root->next = path;
+        if (ImGui::IsKeyPressed(ImGuiKey_AppBack) || ImGui::IsKeyPressed(ImGuiKey_Backspace))
+            root->next = path.parent_path();
+    }
+
+    ImGui::TableNextColumn();
+    ImGui::TextDisabled("--");
+
+    if (open) {
+        ItemVisitor visitor{};
+        for (auto& i : children) {
+            std::visit(visitor, i);
+        }
+        ImGui::TreePop();
+        if (visitor.selection) {
+            selected = visitor.selection;
+        }
+    }
+
+    return selected;
+};
+
 std::vector<std::byte> read(const std::filesystem::path& path, bool add_null_termination)
 {
     std::ifstream ifs(path, std::ios::binary);

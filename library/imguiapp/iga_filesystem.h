@@ -52,56 +52,61 @@ void write(const std::filesystem::path& path, std::span<const std::byte> data);
 std::optional<std::filesystem::path> select_folder_dialog(const std::filesystem::path& current,
                                                           GLFWwindow* window = nullptr);
 
+struct Selection {
+    std::filesystem::path selection;
+    enum class Action { Single, Double } action;
+};
+
+struct Folder;
+struct Root;
+
 struct File {
 
-    void refresh()
-    {
-        stem       = fmt::format("{}{}", path.stem().string(), path.extension().string());
-        size.bytes = static_cast<size_t>(std::filesystem::file_size(path));
-        dirty      = false;
-    }
-    std::filesystem::path path;
-    std::string stem;
-    Size size;
-    bool dirty = true;
-
-    void render()
-    {
-        static ImGuiTreeNodeFlags tree_node_flags_base = ImGuiTreeNodeFlags_SpanAllColumns;
-        ImGuiTreeNodeFlags node_flags                  = tree_node_flags_base;
-
-        if (dirty) refresh();
-
-        ImGui::TableNextRow();
-        ImGui::TableNextColumn();
-
-        ImGui::TreeNodeEx(stem.c_str(), node_flags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
-        ImGui::TableNextColumn();
-        ImGui::Text(fmt::format("{}", size));
-    };
-};
-
-struct ItemVisitor {
-    template <typename T>
-    void operator()(T& i)
-    {
-        i.render();
-    }
-};
-
-struct Folder {
-    Folder() = default;
-    Folder(std::filesystem::path path, Folder* root)
+    File() = default;
+    File(std::filesystem::path path, Root* root)
         : path(std::move(path))
         , root(root)
     {
         assert(root != nullptr);
     }
 
-    Folder(std::filesystem::path path)
-        : path(std::move(path))
+    void refresh()
     {
-        root = this;
+        stem        = fmt::format("{}{}", path.stem().string(), path.extension().string());
+        stem_no_ext = path.stem().string();
+        size.bytes  = static_cast<size_t>(std::filesystem::file_size(path));
+        dirty       = false;
+    }
+    std::filesystem::path path;
+    std::string stem;
+    std::string stem_no_ext;
+    Size size;
+    bool dirty = true;
+    Root* root;
+
+    std::optional<Selection> render();
+};
+
+struct ItemVisitor {
+    std::optional<Selection> selection;
+
+    template <typename T>
+    void operator()(T& i)
+    {
+        auto f = i.render();
+        if (f) {
+            selection = f;
+        }
+    }
+};
+
+struct Folder {
+    Folder() = default;
+    Folder(std::filesystem::path path, Root* root)
+        : path(std::move(path))
+        , root(root)
+    {
+        assert(root != nullptr);
     }
 
     void set(std::filesystem::path path)
@@ -121,7 +126,7 @@ struct Folder {
         for (const std::filesystem::directory_entry& dir_entry : std::filesystem::directory_iterator(path)) {
             auto& i = dir_entry.path();
             if (std::filesystem::is_regular_file(i)) {
-                children.push_back(File{i});
+                children.push_back(File{i, root});
             }
             else if (std::filesystem::is_directory(i)) {
                 children.push_back(Folder{i, root});
@@ -132,45 +137,32 @@ struct Folder {
     }
 
     std::filesystem::path path;
-    Folder* root;
-    std::optional<std::filesystem::path> next;
+    Root* root;
 
     std::string stem;
     std::vector<std::variant<Folder, File>> children;
     bool dirty = true;
 
-    void render(bool* force_open = nullptr)
-    {
-        static ImGuiTreeNodeFlags tree_node_flags_base = ImGuiTreeNodeFlags_SpanAllColumns;
-        ImGuiTreeNodeFlags node_flags                  = tree_node_flags_base;
-
-        if (dirty) refresh();
-
-        ImGui::TableNextRow();
-        ImGui::TableNextColumn();
-
-        if (force_open != nullptr) {
-            ImGui::SetNextItemOpen(*force_open);
-        }
-
-        bool open = ImGui::TreeNodeEx(stem.c_str(), node_flags);
-        if (ImGui::IsItemHovered()) {
-            if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle)) root->next = path;
-            if (ImGui::IsKeyPressed(ImGuiKey_AppBack) || ImGui::IsKeyPressed(ImGuiKey_Backspace))
-                root->next = path.parent_path();
-        }
-
-        ImGui::TableNextColumn();
-        ImGui::TextDisabled("--");
-
-        if (open) {
-            ItemVisitor visitor{};
-            for (auto& i : children) {
-                std::visit(visitor, i);
-            }
-            ImGui::TreePop();
-        }
-    };
+    std::optional<Selection> render(bool* force_open = nullptr);
 };
+
+struct Root {
+    Root() = default;
+    Root(std::filesystem::path path)
+        : folder(std::move(path), this)
+    {}
+
+    bool file_filter(const std::string& stem) const { return filter.PassFilter(stem.c_str()); }
+    void set(std::filesystem::path path) { folder.set(std::move(path)); }
+    std::optional<Selection> render(bool* force_open = nullptr) { return folder.render(force_open); }
+    const std::filesystem::path& path() const { return folder.path; }
+
+    Folder folder;
+    std::optional<std::filesystem::path> extension;
+
+    ImGuiTextFilter filter;
+    std::optional<std::filesystem::path> next;
+};
+
 
 } // namespace iga::filesystem
