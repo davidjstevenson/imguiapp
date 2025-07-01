@@ -166,8 +166,8 @@ void exec(GLFWwindow* window, State* state, ExecHooks& hooks, void* data)
 
         if (hooks.postframe) hooks.postframe(data);
 
-        FrameMark;
         glfwSwapBuffers(window);
+        FrameMark;
     }
 
     ImGui_ImplOpenGL3_Shutdown();
